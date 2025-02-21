@@ -11,6 +11,10 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        sora: ["var(--font-sora)"],
+        inter: ["var(--font-inter)"],
+      },
     },
   },
   plugins: [],

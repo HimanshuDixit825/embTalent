@@ -1,0 +1,23 @@
+CREATE TABLE applicant_cvs (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    lead_line_item_id UUID REFERENCES ra_lead_line_items(id),
+    applicant_name VARCHAR(256),
+    cv_url TEXT,
+    cv_filename VARCHAR(256),
+    emb_cv_url TEXT,
+    emb_cv_filename VARCHAR(256),
+    year_of_exp NUMERIC(4,1),
+    vendor_budget VARCHAR(256),
+    description TEXT,
+    emb_applicant_status VARCHAR(50) DEFAULT 'cv_uploaded',
+    client_applicant_status VARCHAR(50) DEFAULT 'pending',
+    emb_rejection_reason TEXT,
+    client_rejection_reason TEXT,
+    emb_shortlisted BOOLEAN DEFAULT false,
+    applicant_emb_cost VARCHAR(100),
+    status BOOLEAN DEFAULT true,
+    created_by BIGINT,
+    updated_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);

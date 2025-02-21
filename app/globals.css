@@ -19,3 +19,21 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide scrollbar while maintaining scroll functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+}
+
+/* Green filter for active sidebar icons */
+.filter-green {
+  filter: brightness(0) saturate(100%) invert(56%) sepia(96%) saturate(447%) hue-rotate(116deg) brightness(95%) contrast(106%);
+}

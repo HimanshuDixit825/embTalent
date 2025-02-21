@@ -1,0 +1,11 @@
+CREATE INDEX idx_ra_users_email ON ra_users(email);
+CREATE INDEX idx_ra_users_status ON ra_users(status);
+CREATE INDEX idx_ra_leads_user_id ON ra_leads(user_id);
+CREATE INDEX idx_ra_leads_status ON ra_leads(status, lead_status);
+CREATE INDEX idx_ra_leads_emb_id ON ra_leads(emb_lead_id);
+CREATE INDEX idx_lead_line_items_lead_id ON ra_lead_line_items(lead_id);
+CREATE INDEX idx_lead_line_items_status ON ra_lead_line_items(status, lead_line_item_status);
+CREATE INDEX idx_skills_bifurcation ON skills(resource_bifurcation_id);
+CREATE INDEX idx_lead_line_item_skills_item ON lead_line_item_skills(lead_line_item_id);
+CREATE INDEX idx_applicant_cvs_line_item ON applicant_cvs(lead_line_item_id);
+CREATE INDEX idx_applicant_cvs_status ON applicant_cvs(status, emb_applicant_status, client_applicant_status);

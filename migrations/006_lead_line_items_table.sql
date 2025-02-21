@@ -1,0 +1,21 @@
+CREATE TABLE ra_lead_line_items (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    lead_id UUID REFERENCES ra_leads(id),
+    emb_lead_line_item_id VARCHAR(20) UNIQUE NOT NULL,
+    skill_id UUID REFERENCES skills(id),
+    year_of_exp VARCHAR(10),
+    work_location_type VARCHAR(50) DEFAULT 'remote',
+    currency VARCHAR(20),
+    budget VARCHAR(100),
+    resource_count INTEGER,
+    job_description TEXT,
+    team_model VARCHAR(50),
+    locations JSONB,
+    lead_line_item_status VARCHAR(50) DEFAULT 'new',
+    assigned_user_id BIGINT REFERENCES ra_users(id),
+    status BOOLEAN DEFAULT true,
+    created_by BIGINT,
+    updated_by BIGINT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
