@@ -76,7 +76,7 @@ const ChatPage = () => {
     {
       sender: "bot",
       content: initialMessage,
-      avatar: "/orb.png",
+      avatar: "/Orb.png",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -195,7 +195,7 @@ const ChatPage = () => {
         const botResponse = {
           sender: "bot",
           content: `I've removed "${skillToRemove}" from the skills list.`,
-          avatar: "/orb.png",
+          avatar: "/Orb.png",
         };
         const updatedMessages = [...newMessages, botResponse];
         setMessages(updatedMessages);
@@ -277,7 +277,7 @@ const ChatPage = () => {
       const botResponse = {
         sender: "bot",
         content: cleanMessage,
-        avatar: "/orb.png",
+        avatar: "/Orb.png",
       };
 
       const updatedMessages = [...newMessages, botResponse];
@@ -291,7 +291,7 @@ const ChatPage = () => {
       const errorMessage = {
         sender: "bot",
         content: "I apologize, but I encountered an error. Please try again.",
-        avatar: "/orb.png",
+        avatar: "/Orb.png",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -373,12 +373,10 @@ const ChatPage = () => {
                 }`}
               >
                 <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
-                  <Image
+                  <img
                     src={message.avatar}
                     alt={message.sender}
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-contain"
+                    className="w-8 h-8 object-contain"
                   />
                 </div>
                 <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
@@ -392,12 +390,10 @@ const ChatPage = () => {
             <div className="max-w-[80%]">
               <div className="flex items-center rounded-lg bg-[#3C3C3C] shadow-lg">
                 <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
-                  <Image
-                    src="/orb.png"
+                  <img
+                    src="/Orb.png"
                     alt="bot"
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-contain"
+                    className="w-8 h-8 object-contain"
                   />
                 </div>
                 <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
