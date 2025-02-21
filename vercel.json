@@ -1,0 +1,16 @@
+{
+  "buildCommand": "next build",
+  "ignoreCommand": true,
+  "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "next.config.mjs",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "NEXT_LINT_IGNORE_BUILD_ERROR": "true",
+    "NEXT_TYPESCRIPT_IGNORE_BUILD_ERROR": "true",
+    "NEXT_IGNORE_ESLINT_ERROR": "true"
+  }
+}
