@@ -1,6 +1,5 @@
 {
   "buildCommand": "next build",
-  "ignoreCommand": true,
   "installCommand": "npm install",
   "builds": [
     {
