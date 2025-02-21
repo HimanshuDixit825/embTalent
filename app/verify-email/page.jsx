@@ -1,9 +1,11 @@
 "use client";
+import { Suspense } from "react";
 import { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function VerifyEmailPage() {
+// Form wrapper component
+function VerificationForm() {
   const { isLoaded, signIn } = useSignIn();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,5 +82,27 @@ export default function VerifyEmailPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Loading component
+function LoadingState() {
+  return (
+    <div className="min-h-screen bg-[#030D06] flex items-center justify-center">
+      <div className="w-full max-w-md p-8 bg-[#0F2A1A26] backdrop-blur-md rounded-2xl">
+        <h1 className="text-[31px] font-semibold text-center text-white mb-6">
+          Loading...
+        </h1>
+      </div>
+    </div>
+  );
+}
+
+// Main page component with Suspense
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <VerificationForm />
+    </Suspense>
   );
 }
