@@ -188,7 +188,7 @@ const Sidebar = ({ onExpandChange }) => {
               isExpanded ? "right-4 left-4 bottom-16" : "left-16 bottom-0 w-48"
             } bg-white rounded-lg shadow-xl overflow-hidden z-50`}
           >
-            <button
+            {/* <button
               className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-300 font-inter border-b border-gray-100"
               onClick={() => {
                 setShowProfileMenu(false);
@@ -203,7 +203,7 @@ const Sidebar = ({ onExpandChange }) => {
               }}
             >
               Edit Profile
-            </button>
+            </button> */}
             <button
               className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 text-left transition-colors duration-300 font-inter flex items-center justify-between"
               onClick={handleLogout}
