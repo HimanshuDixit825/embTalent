@@ -98,13 +98,10 @@ const Sidebar = ({ onExpandChange }) => {
         >
           <div className="px-2 flex items-center h-[45px]">
             <div className="flex-shrink-0 w-[45px] h-[45px] relative">
-              <Image
-                src="/orb.png"
+              <img
+                src="/Orb.png"
                 alt="Orb"
-                layout="fill"
-                objectFit="contain"
-                className="opacity-60 group-hover:opacity-100 transition-all duration-300"
-                priority
+                className="w-full h-full object-contain opacity-60 group-hover:opacity-100 transition-all duration-300"
               />
             </div>
             <div
