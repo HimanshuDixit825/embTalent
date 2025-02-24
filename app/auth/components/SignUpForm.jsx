@@ -86,7 +86,7 @@ function SignUpForm() {
       }
 
       // Get the user ID from Clerk
-      const userId = completeSignUp.createdUserId;
+      const clerkUserId = completeSignUp.createdUserId;
 
       // Store in database and link with lead record
       try {
@@ -100,7 +100,7 @@ function SignUpForm() {
             email: formData.email,
             password: formData.password,
             name: formData.name,
-            userid: userId,
+            userid: clerkUserId,
           }),
         });
 
@@ -110,12 +110,19 @@ function SignUpForm() {
         }
 
         const userData = await userResponse.json();
+        const numericId = parseInt(userData.numericId);
+
+        if (!numericId || isNaN(numericId)) {
+          throw new Error("Failed to get numeric ID from ra_users_duplicate");
+        }
+
+        // console.log("Using numeric ID for linking:", numericId);
 
         // Get token from localStorage
         const token = localStorage.getItem("recruitment_flow_token");
 
         if (token) {
-          // Link lead record to user
+          // Link lead record to user using numeric ID
           const linkResponse = await fetch("/api/lead-line-item", {
             method: "PATCH",
             headers: {
@@ -123,16 +130,20 @@ function SignUpForm() {
             },
             body: JSON.stringify({
               temporary_token: token,
-              user_id: userId,
+              user_id: numericId,
             }),
           });
 
           if (!linkResponse.ok) {
-            console.error(
-              "Failed to link lead record:",
-              await linkResponse.json()
+            const errorData = await linkResponse.json();
+            // console.error("Failed to link record to user:", errorData);
+            throw new Error(
+              `Failed to link record: ${JSON.stringify(errorData)}`
             );
           }
+
+          const linkData = await linkResponse.json();
+          // console.log("Link response:", linkData);
 
           // Clear token from localStorage
           localStorage.removeItem("recruitment_flow_token");
@@ -142,12 +153,12 @@ function SignUpForm() {
         await setActive({ session: completeSignUp.createdSessionId });
         router.push("/dashboard");
       } catch (dbError) {
-        console.error("Database error:", dbError);
+        // console.error("Database error:", dbError);
         setError(`Database error: ${dbError.message}`);
         return;
       }
     } catch (err) {
-      console.error("Verification error:", err);
+      // console.error("Verification error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -166,7 +177,7 @@ function SignUpForm() {
         redirectUrlComplete: `${window.location.origin}/auth/callback`,
       });
     } catch (err) {
-      console.error("Social login error:", err);
+      // console.error("Social login error:", err);
       setError(err.message || "An error occurred during social login");
       setLoading(false);
     }
