@@ -1,9 +1,39 @@
 {
-  "buildCommand": "next build",
-  "installCommand": "npm install",
-  "env": {
-    "NEXT_LINT_IGNORE_BUILD_ERROR": "true",
-    "NEXT_TYPESCRIPT_IGNORE_BUILD_ERROR": "true",
-    "NEXT_IGNORE_ESLINT_ERROR": "true"
-  }
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "regions": ["bom1"],
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }

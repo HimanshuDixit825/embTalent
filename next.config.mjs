@@ -11,9 +11,17 @@ const nextConfig = {
   compiler: {
     removeConsole: true,
   },
-  experimental: {
-    optimizeCss: true,
+  // Vercel-specific optimizations
+  reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
+  // Cache optimization
+  onDemandEntries: {
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 5,
   },
+  // Image optimization
   images: {
     remotePatterns: [
       {
@@ -29,6 +37,10 @@ const nextConfig = {
         hostname: "img.clerk.dev",
       },
     ],
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96],
+    minimumCacheTTL: 60,
+    formats: ["image/webp"],
   },
   async headers() {
     return [

@@ -740,17 +740,19 @@ const TechnologyCard = ({
   return (
     <button
       onClick={handleClick}
-      className={`group rounded-lg !transition-transform duration-200 cursor-pointer
-                will-change-transform contain-layout hover:-translate-y-1 hover:shadow-lg w-[100px] h-[131px] flex flex-col items-center justify-center p-3
+      className={`group rounded-lg transform-gpu will-change-transform contain-layout cursor-pointer
+                hover:-translate-y-1 hover:shadow-lg w-[100px] h-[131px] flex flex-col items-center justify-center p-3
+                transition-[transform,background-color] duration-200 ease-out
                 ${
                   isSelected
                     ? "bg-emerald-900 bg-opacity-50"
-                    : "bg-[#3A3A3A80] border border-[#515050]  hover:bg-gray-700"
+                    : "bg-[#3A3A3A80] border border-[#515050] hover:bg-gray-700"
                 }`}
     >
       <div
-        className="transform !transition-transform duration-200 will-change-transform
-                group-hover:scale-110 w-[70px] h-[70px] flex items-center justify-center"
+        className="transform-gpu will-change-transform contain-paint
+                group-hover:scale-110 w-[70px] h-[70px] flex items-center justify-center
+                transition-transform duration-200 ease-out"
       >
         <Image
           src={imageSrc}
@@ -760,7 +762,7 @@ const TechnologyCard = ({
           className="object-contain"
         />
       </div>
-      <span className="text-white text-xs font-bold text-center transition-all duration-300 group-hover:text-opacity-90 mt-2">
+      <span className="text-white text-xs font-bold text-center mt-2 transition-opacity duration-200 ease-out group-hover:text-opacity-90">
         {label}
       </span>
       {isSelected && (
