@@ -371,4 +371,76 @@ export const budgetData = {
       budget3: 3550,
     },
   },
+  "Site Reliability": {
+    Mid: {
+      budget1: 2950,
+      budget2: { value: 3300, isRecommended: true },
+      budget3: 3500,
+    },
+    Senior: {
+      budget1: 3400,
+      budget2: { value: 3800, isRecommended: true },
+      budget3: 4100,
+    },
+  },
+  "Business Intelligence": {
+    Mid: {
+      budget1: 2950,
+      budget2: { value: 3300, isRecommended: true },
+      budget3: 3500,
+    },
+    Senior: {
+      budget1: 3150,
+      budget2: { value: 3500, isRecommended: true },
+      budget3: 3850,
+    },
+  },
+  "Microsoft Apps": {
+    Mid: {
+      budget1: 2950,
+      budget2: { value: 3300, isRecommended: true },
+      budget3: 3500,
+    },
+    Senior: {
+      budget1: 3400,
+      budget2: { value: 3800, isRecommended: true },
+      budget3: 4100,
+    },
+  },
+  "Site Reliability": {
+    Mid: {
+      budget1: 2950,
+      budget2: { value: 3300, isRecommended: true },
+      budget3: 3500,
+    },
+    Senior: {
+      budget1: 3400,
+      budget2: { value: 3800, isRecommended: true },
+      budget3: 4100,
+    },
+  },
+  "Business Intelligence": {
+    Mid: {
+      budget1: 2950,
+      budget2: { value: 3300, isRecommended: true },
+      budget3: 3500,
+    },
+    Senior: {
+      budget1: 3150,
+      budget2: { value: 3500, isRecommended: true },
+      budget3: 3850,
+    },
+  },
+  "Microsoft Apps": {
+    Mid: {
+      budget1: 2950,
+      budget2: { value: 3300, isRecommended: true },
+      budget3: 3500,
+    },
+    Senior: {
+      budget1: 3400,
+      budget2: { value: 3800, isRecommended: true },
+      budget3: 4100,
+    },
+  },
 };

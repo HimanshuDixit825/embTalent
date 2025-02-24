@@ -1,4 +1,3 @@
-// app/api/users/duplicate/route.js
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -21,17 +20,18 @@ export async function GET(request) {
     }
 
     // Check if user exists by userid
-    const { data: existingUser, error } = await supabase
+    const { data: users, error } = await supabase
       .from("ra_users_duplicate")
       .select("id, userid")
-      .eq("userid", userid)
-      .single();
+      .eq("userid", userid);
 
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 is "not found" error
-      console.error("Error checking user existence:", error);
+    if (error) {
+      // console.error("Error checking user existence:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    const existingUser = users && users.length > 0 ? users[0] : null;
+    // console.log("Found user:", existingUser);
 
     // Ensure we return the ID as a number, not a string
     return NextResponse.json({
@@ -40,7 +40,7 @@ export async function GET(request) {
       numericId: existingUser ? parseInt(existingUser.id) : null,
     });
   } catch (error) {
-    console.error("Error checking user:", error);
+    // console.error("Error checking user:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -49,27 +49,33 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase
+    // Check if user already exists by either email or userid
+    const { data: existingUsers, error: searchError } = await supabase
       .from("ra_users_duplicate")
       .select("*")
-      .eq("email", body.email)
-      .single();
+      .or(`email.eq."${body.email}",userid.eq."${body.userid}"`);
+
+    if (searchError) throw searchError;
+
+    const existingUser = existingUsers && existingUsers.length > 0 ? existingUsers[0] : null;
 
     if (existingUser) {
+      // console.log("Updating existing user:", existingUser.id);
       // If user exists, update their information
       const { data, error } = await supabase
         .from("ra_users_duplicate")
         .update({
           name: body.name,
           userid: body.userid,
+          email: body.email, // Update email in case it changed
           updated_at: new Date().toISOString(),
         })
-        .eq("email", body.email)
+        .eq("id", existingUser.id)
         .select();
 
       if (error) throw error;
 
+      // console.log("User updated:", data[0]);
       return NextResponse.json({
         message: "User updated successfully",
         user: data[0],
@@ -105,7 +111,7 @@ export async function POST(request) {
       numericId: parseInt(data[0].id),
     });
   } catch (error) {
-    console.error("API Error:", error);
+    // console.error("API Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to process user" },
       { status: 500 }
