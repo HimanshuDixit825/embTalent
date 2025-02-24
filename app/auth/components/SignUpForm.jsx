@@ -9,7 +9,6 @@ function SignUpForm() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,8 +17,10 @@ function SignUpForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
     name: "",
+    countryCode: "+91",
+    phoneNumber: "",
+    companyName: "",
     agreeToTerms: false,
   });
 
@@ -30,16 +31,29 @@ function SignUpForm() {
     setError("");
     setLoading(true);
 
-    // Validate name
+    // Validate required fields
     if (!formData.name.trim()) {
       setError("Name is required!");
       setLoading(false);
       return;
     }
 
-    // Validate password match
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match!");
+    if (!formData.phoneNumber.trim()) {
+      setError("Phone number is required!");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.companyName.trim()) {
+      setError("Company name is required!");
+      setLoading(false);
+      return;
+    }
+
+    // Validate phone number format (only numbers)
+    const phoneRegex = /^\d+$/;
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      setError("Phone number should only contain numbers");
       setLoading(false);
       return;
     }
@@ -100,6 +114,8 @@ function SignUpForm() {
             email: formData.email,
             password: formData.password,
             name: formData.name,
+            phoneNumber: `${formData.countryCode} ${formData.phoneNumber}`,
+            companyName: formData.companyName,
             userid: clerkUserId,
           }),
         });
@@ -185,6 +201,17 @@ function SignUpForm() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    // For phone number, only allow numbers
+    if (name === "phoneNumber") {
+      const numbersOnly = value.replace(/[^0-9]/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numbersOnly,
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -297,29 +324,51 @@ function SignUpForm() {
           </p>
         </div>
 
-        {/* Confirm Password Field */}
+        {/* Phone Number Field */}
         <div>
           <label className="block text-[16px] font-medium text-white mb-1">
-            Re-Enter Password
+            Phone Number
           </label>
-          <div className="relative">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              placeholder="Re-enter Password"
-              value={formData.confirmPassword}
+          <div className="flex gap-2">
+            <select
+              name="countryCode"
+              value={formData.countryCode}
               onChange={handleChange}
-              className="w-full px-4 py-2 bg-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black pr-20"
+              className="px-3 py-2 bg-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
+            >
+              <option value="+62">+62</option>
+              <option value="+91">+91</option>
+              <option value="+1">+1</option>
+              <option value="+44">+44</option>
+              <option value="+86">+86</option>
+              <option value="+81">+81</option>
+            </select>
+            <input
+              type="tel"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
+              placeholder="95326885621"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-black/60 hover:text-black text-sm"
-            >
-              {showConfirmPassword ? "Hide" : "Show"}
-            </button>
           </div>
+        </div>
+
+        {/* Company Name Field */}
+        <div>
+          <label className="block text-[16px] font-medium text-white mb-1">
+            Company Name
+          </label>
+          <input
+            type="text"
+            name="companyName"
+            value={formData.companyName}
+            onChange={handleChange}
+            className="w-full px-3 py-2 bg-white border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
+            placeholder="Your company name"
+            required
+          />
         </div>
 
         {error && (

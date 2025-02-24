@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -13,15 +12,12 @@ import SuccessPopover from "@/components/SuccessPopover";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-
 const ExperiencePage = () => {
   const selectedTechs = useSelector(selectTechnologies);
   const mainSelection = useSelector(selectMainTechnology);
   const router = useRouter();
-
   const [areBudgetsLoaded, setAreBudgetsLoaded] = useState(false);
   const [isLoadingBudget, setIsLoadingBudget] = useState(false);
-
   const normalizeTechName = (techName) => {
     const mappings = {
       "Next.js": "React",
@@ -29,37 +25,30 @@ const ExperiencePage = () => {
     };
     return mappings[techName] || techName;
   };
-
   const [selectedItems, setSelectedItems] = useState({
     Seniority: null,
     Duration: null,
     Budget: null,
     BudgetIndex: null, // Track which budget option was selected
   });
-
   const [calculatedBudgets, setCalculatedBudgets] = useState({
     budget1: { value: null, isRecommended: false },
     budget2: { value: null, isRecommended: false },
     budget3: { value: null, isRecommended: false },
   });
-
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Calculate budgets when selections change
   const calculateBudgets = () => {
     const rawTechStack =
       selectedTechs.length > 0 ? selectedTechs[0]?.label : mainSelection?.label;
     const techStack = normalizeTechName(rawTechStack);
     const seniority = selectedItems.Seniority?.split(" ")[0];
-
     if (techStack && seniority && selectedItems.Duration) {
       if (!areBudgetsLoaded) {
         setIsLoadingBudget(true);
       }
-
       const techBudgets = budgetData[techStack]?.[seniority];
-
       if (techBudgets) {
         if (!areBudgetsLoaded) {
           setTimeout(() => {
@@ -143,11 +132,9 @@ const ExperiencePage = () => {
       setIsLoadingBudget(false);
     }
   };
-
   useEffect(() => {
     calculateBudgets();
   }, [selectedTechs, mainSelection, selectedItems]);
-
   const LoadingBudget = () => (
     <div className="flex items-center justify-center h-[72px] bg-[#6B6B6B80] border border-[#515050] rounded-lg">
       <div className="flex gap-1">
@@ -157,7 +144,6 @@ const ExperiencePage = () => {
       </div>
     </div>
   );
-
   const Loader = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-[#1C1C1C] p-8 rounded-lg shadow-xl flex flex-col items-center">
@@ -166,16 +152,14 @@ const ExperiencePage = () => {
           <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
           <div className="w-3 h-3 bg-emerald-500 rounded-full animate-bounce"></div>
         </div>
-        <p className="text-white text-sm">Calculating Budget...</p>
+        <p className="text-white text-sm">AI is Calculating Your Budget...</p>
       </div>
     </div>
   );
-
   const formatBudget = (amount) => {
     if (!amount) return "$--,---";
     return `$${amount.toLocaleString()}`;
   };
-
   const isFormComplete = () => {
     // Check only required fields: Seniority, Duration, and Budget
     return (
@@ -185,7 +169,6 @@ const ExperiencePage = () => {
       selectedItems.BudgetIndex !== null
     );
   };
-
   const handleSelection = (category, label) => {
     if (category === "Budget") {
       // Find which budget option was selected
@@ -193,13 +176,17 @@ const ExperiencePage = () => {
         (_, index) =>
           formatBudget(calculatedBudgets[`budget${index + 1}`].value) === label
       );
-
       setSelectedItems((prev) => ({
         ...prev,
         [category]: label,
         BudgetIndex: budgetIndex !== -1 ? `budget${budgetIndex + 1}` : null,
       }));
     } else {
+      // Reset budgets state when Seniority or Duration changes
+      if (category === "Seniority" || category === "Duration") {
+        setAreBudgetsLoaded(false);
+        setIsLoadingBudget(false);
+      }
       setSelectedItems((prev) => ({
         ...prev,
         [category]: label,
@@ -209,7 +196,6 @@ const ExperiencePage = () => {
       }));
     }
   };
-
   const pageContent = {
     title: "Set Experience and Engagement",
     description:
@@ -275,7 +261,6 @@ const ExperiencePage = () => {
       },
     ],
   };
-
   const RightPanelComponent = <RightPanel />;
 
   return (
@@ -299,7 +284,6 @@ const ExperiencePage = () => {
             </div>
           </div>
         </div>
-
         {pageContent.sections.map((section, index) => (
           <div key={index} className="space-y-4">
             <h2 className="text-xl font-semibold text-white font-inter">
@@ -315,7 +299,6 @@ const ExperiencePage = () => {
               {section.items.map((item, itemIndex) => {
                 const isSelected = selectedItems[item.category] === item.label;
                 const isSenioritySection = item.category === "Seniority";
-
                 return (
                   <div
                     key={itemIndex}
@@ -370,26 +353,22 @@ const ExperiencePage = () => {
           </div>
         ))}
       </div>
-
       <div className="flex justify-end mt-10">
         <button
           onClick={async () => {
             // Prevent multiple submissions
             if (!isFormComplete() || isSubmitting) return;
-
             const token = localStorage.getItem("recruitment_flow_token");
             if (!token) {
               console.error("No token found");
               return;
             }
-
             setIsSubmitting(true);
             try {
               // Get the actual numeric budget value
               const budgetValue = selectedItems.BudgetIndex
                 ? calculatedBudgets[selectedItems.BudgetIndex].value
                 : null;
-
               // Save data only on submit
               const response = await fetch("/api/lead-line-item", {
                 method: "PUT",
@@ -404,13 +383,11 @@ const ExperiencePage = () => {
                   budget: budgetValue,
                 }),
               });
-
               const data = await response.json();
               if (!data.success) {
                 console.error("Error updating record:", data.error);
                 return;
               }
-
               // Only show success popover after successful save
               setIsPopoverOpen(true);
             } catch (error) {
@@ -429,7 +406,6 @@ const ExperiencePage = () => {
           {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </div>
-
       <SuccessPopover
         isOpen={isPopoverOpen}
         onClose={() => {
@@ -441,5 +417,4 @@ const ExperiencePage = () => {
     </PageLayout>
   );
 };
-
 export default ExperiencePage;

@@ -415,7 +415,7 @@ const ChatPage = () => {
                 adjustTextareaHeight();
               }}
               onKeyDown={handleKeyPress}
-              placeholder="Message AURA"
+              placeholder="Ask Aura: Need 5YOP in React and Node"
               rows={1}
               className="w-full bg-[#3A3A3A] border border-[#515050] rounded-lg py-3.5 pl-4 pr-12 text-gray-300 focus:outline-none focus:border-emerald-500 shadow-lg resize-none overflow-hidden"
             />

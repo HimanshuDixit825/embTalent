@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const Sidebar = ({ onExpandChange }) => {
   const { signOut } = useClerk();
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,17 +56,17 @@ const Sidebar = ({ onExpandChange }) => {
   const sidebarItems = [
     {
       id: "talent",
-      icon: "/talentai.png",
+      icon: "/talentai1.png",
       label: "Talent.ai",
       route: "/select",
     },
     {
       id: "requirements",
-      icon: "/requirement 3.png",
+      icon: "/requirement.png",
       label: "Requirements",
       route: "/dashboard",
     },
-    { id: "calendar", icon: "/calender2.png", label: "Book a Calender" },
+    { id: "calendar", icon: "/calender 3.png", label: "Book a Calender" },
   ];
 
   const handleLogout = async () => {
@@ -80,7 +81,6 @@ const Sidebar = ({ onExpandChange }) => {
       setShowProfileMenu(false);
     }
   };
-
   return (
     <div
       ref={sidebarRef}
@@ -138,13 +138,25 @@ const Sidebar = ({ onExpandChange }) => {
               isExpanded ? "px-4" : "justify-center"
             } hover:bg-white/5`}
           >
-            <div className="flex-shrink-0 w-[45px] h-[45px] relative flex items-center justify-center">
+            <div
+              className={`
+              flex-shrink-0 w-[45px] h-[45px] relative flex items-center justify-center
+              ${pathname === item.route ? "bg-[#00A36C] rounded-xl" : ""}
+            `}
+            >
               <Image
                 src={item.icon}
                 alt={item.label}
                 width={45}
                 height={45}
-                className="transition-all duration-300 object-contain opacity-60 group-hover:opacity-100"
+                className={`
+                  transition-all duration-300 object-contain
+                  ${
+                    pathname === item.route
+                      ? "opacity-100"
+                      : "opacity-60 group-hover:opacity-100"
+                  }
+                `}
                 style={{ backgroundColor: "transparent" }}
               />
             </div>
@@ -156,7 +168,6 @@ const Sidebar = ({ onExpandChange }) => {
           </button>
         ))}
       </div>
-
       {/* Profile Menu */}
       <div className="mt-auto relative">
         <div className={`${isExpanded ? "px-4" : "flex justify-center"}`}>
@@ -164,10 +175,20 @@ const Sidebar = ({ onExpandChange }) => {
             className={`flex items-center p-2 w-full ${
               isExpanded ? "bg-[#00A36C] rounded-3xl" : ""
             } transition-all duration-300`}
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            onClick={() => {
+              if (isSignedIn) {
+                setShowProfileMenu(!showProfileMenu);
+              } else {
+                router.push("/auth/sign-in");
+              }
+            }}
           >
             <Image
-              src={user?.imageUrl || "/Avatar 37.png"}
+              src={
+                isSignedIn
+                  ? user?.imageUrl || "/Avatar 37.png"
+                  : "/Avatar 37.png"
+              }
               alt="Avatar"
               width={45}
               height={45}
@@ -175,35 +196,21 @@ const Sidebar = ({ onExpandChange }) => {
             />
             {isExpanded && (
               <span className="ml-3 text-white text-lg font-inter">
-                {user?.firstName} {user?.lastName}
+                {isSignedIn
+                  ? `${user?.firstName} ${user?.lastName}`
+                  : "Sign In"}
               </span>
             )}
           </button>
         </div>
 
-        {/* Profile Menu Popout */}
-        {showProfileMenu && (
+        {/* Profile Menu Popout - Only shown when signed in */}
+        {isSignedIn && showProfileMenu && (
           <div
             className={`absolute ${
               isExpanded ? "right-4 left-4 bottom-16" : "left-16 bottom-0 w-48"
             } bg-white rounded-lg shadow-xl overflow-hidden z-50`}
           >
-            {/* <button
-              className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-300 font-inter border-b border-gray-100"
-              onClick={() => {
-                setShowProfileMenu(false);
-              }}
-            >
-              View Profile
-            </button>
-            <button
-              className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 text-left transition-colors duration-300 font-inter border-b border-gray-100"
-              onClick={() => {
-                setShowProfileMenu(false);
-              }}
-            >
-              Edit Profile
-            </button> */}
             <button
               className="w-full px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 text-left transition-colors duration-300 font-inter flex items-center justify-between"
               onClick={handleLogout}

@@ -128,12 +128,16 @@ export default function RightPanel() {
         />
 
         {(mustHaveSkills.length > 0 || goodToHaveSkills.length > 0) && (
-          <button
-            onClick={() => router.push("/experience")}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg transition-colors relative z-10 cursor-pointer"
-          >
-            Continue to Experience
-          </button>
+          <div className="absolute bottom-20 right-6">
+            {" "}
+            {/* New container for positioning */}
+            <button
+              onClick={() => router.push("/experience")}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors relative z-10 cursor-pointer"
+            >
+              Submit
+            </button>
+          </div>
         )}
       </div>
     </div>
