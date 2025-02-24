@@ -9,7 +9,9 @@ const nextConfig = {
   },
   swcMinify: true,
   compiler: {
-    removeConsole: true,
+    removeConsole: {
+      exclude: ["error"],
+    },
   },
   // Vercel-specific optimizations
   reactStrictMode: true,

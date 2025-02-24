@@ -3,7 +3,14 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "buildCommand": "next build",
+        "env": {
+          "NODE_ENV": "production",
+          "NEXT_REMOVE_CONSOLE": "true"
+        }
+      }
     }
   ],
   "regions": ["bom1"],
