@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AuthPopup from "@/components/AuthPopup";
+import { checkUserAuth } from "@/lib/authUtils";
 
 function Form() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -12,6 +14,7 @@ function Form() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [authPopup, setAuthPopup] = useState({ show: false, message: "", type: "error" });
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,6 +28,24 @@ function Form() {
     setLoading(true);
 
     try {
+      // Check if user exists with this email
+      try {
+        const authCheck = await checkUserAuth(formData.email);
+        if (authCheck.exists && authCheck.user.isSocialLogin && authCheck.user.socialProvider.includes("google")) {
+          // User exists with Google authentication, suggest using Google login
+          setAuthPopup({
+            show: true,
+            message: "This email is associated with a Google account. Please sign in with Google instead.",
+            type: "info"
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking user auth:", err);
+        // Continue with sign in if check fails
+      }
+
       const result = await signIn.create({
         identifier: formData.email,
         password: formData.password,
@@ -83,16 +104,19 @@ function Form() {
 
     try {
       setLoading(true);
-      // Get temporary token before redirecting
-      const temporary_token = localStorage.getItem('recruitment_flow_token');
       
-      await signIn.authenticateWithRedirect({
-        strategy,
-        redirectUrl: "/auth/callback",
-        redirectUrlComplete: temporary_token 
-          ? "/auth/callback" 
-          : "/dashboard",
-      });
+      // Check if user exists and what type of authentication they use
+      if (strategy === "oauth_google") {
+        // Get email from Google OAuth
+        const googleResponse = await signIn.authenticateWithRedirect({
+          strategy,
+          redirectUrl: "/auth/callback",
+          redirectUrlComplete: "/auth/callback",
+        });
+        
+        // This code won't execute immediately due to the redirect
+        // The actual check will happen in the callback component
+      }
     } catch (err) {
       setError(err.message || "An error occurred during social login");
       setLoading(false);
@@ -109,6 +133,13 @@ function Form() {
 
   return (
     <div className="relative z-10 flex justify-center">
+      {authPopup.show && (
+        <AuthPopup
+          message={authPopup.message}
+          type={authPopup.type}
+          onClose={() => setAuthPopup({ show: false, message: "", type: "error" })}
+        />
+      )}
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md w-full px-6">
         <h1 className="text-[31px] font-semibold text-center text-white mb-6">
           Sign In!

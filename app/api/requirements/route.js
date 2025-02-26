@@ -47,19 +47,6 @@ export async function GET(request) {
       requirements,
     });
 
-    // Also check for any unlinked requirements (with temporary_token)
-    const { data: unlinkedReqs, error: unlinkedError } = await supabase
-      .from("ra_lead_line_item_col")
-      .select("*")
-      .is("user_id", null)
-      .not("temporary_token", "is", null)
-      .order("created_at", { ascending: false });
-
-    console.log("Unlinked requirements:", {
-      count: unlinkedReqs?.length,
-      unlinkedReqs,
-    });
-
     // Transform all requirements to match RequirementCard props
     const transformedData = (requirements || []).map((req) => ({
       title: req.domain || "New Requirement",

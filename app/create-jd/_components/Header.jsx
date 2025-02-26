@@ -7,16 +7,16 @@ export default function Header() {
   const router = useRouter();
 
   return (
-    <div className="mb-12">
-      <div className="flex items-start gap-3">
+    <div className="mb-6 sm:mb-12">
+      <div className="flex items-start gap-2 sm:gap-3">
         <button
           onClick={() => router.back()}
-          className="text-white hover:text-gray-300 transition-colors mt-2"
+          className="hidden sm:block text-white hover:text-gray-300 transition-colors mt-1 sm:mt-2"
         >
-          <ArrowLeft size={36} />
+          <ArrowLeft size={24} className="sm:w-9 sm:h-9" />
         </button>
-        <div>
-          <h1 className="text-[40px] font-bold text-white mb-2">
+        <div className="sm:ml-0 ml-1">
+          <h1 className="text-[18px] sm:text-[40px] font-bold text-white mb-1 sm:mb-2">
             Create or Upload a JD
           </h1>
           <p className="text-gray-400 text-[12px] italic">

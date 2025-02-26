@@ -132,12 +132,12 @@ export default function UploadSection() {
     return <PdfViewer url={pdfUrl} onBack={handleBack} />;
   }
   return (
-    <div className="w-full h-[calc(100vh-6rem)]  rounded-lg flex flex-col p-6">
+    <div className="w-full min-h-[calc(100vh-6rem)] rounded-lg flex flex-col p-3 sm:p-6">
       {/* Header */}
-      <div className="bg-[#3C3C3C] p-5 rounded-lg">
-        <div className="flex items-center justify-center gap-4 mb-8 ">
+      <div className="bg-[#3C3C3C] p-4 sm:p-5 rounded-lg">
+        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-white text-2xl font-inter font-[20px]">
+            <h1 className="text-white text-xl sm:text-2xl font-inter">
               Upload Files
             </h1>
           </div>
@@ -145,36 +145,34 @@ export default function UploadSection() {
         {/* Upload Area */}
         <div
           {...getRootProps()}
-          className={`w-full bg-[#646464] rounded-lg  mb-4 ${
-            uploading || analyzing ? "opacity-50 cursor-not-allowed" : ""
-          } ${
-            isDragActive
+          className={`w-full bg-[#646464] rounded-lg mb-3 sm:mb-4 ${uploading || analyzing ? "opacity-50 cursor-not-allowed" : ""
+            } ${isDragActive
               ? "border-blue-500 border"
               : "border border-spacing-6 border-dashed border-white"
-          }`}
+            }`}
         >
-          <div className="text-center p-8 rounded-lg">
+          <div className="text-center p-6 sm:p-8 rounded-lg">
             <input {...getInputProps()} disabled={uploading || analyzing} />
             {uploading || analyzing ? (
               <div className="flex flex-col items-center gap-2">
                 <LoadingSpinner />
-                <p className="text-white mb-1 text-[14px]">
+                <p className="text-white mb-1 text-xs sm:text-sm">
                   {analyzing ? "Analyzing PDF..." : "Uploading PDF..."}
                 </p>
-                <p className="text-gray-400 text-[12px]">
+                <p className="text-gray-400 text-xs">
                   This may take a few moments
                 </p>
               </div>
             ) : (
               <>
-                <p className="text-white mb-2 text-sm">
+                <p className="text-white mb-2 text-xs sm:text-sm">
                   {isDragActive ? "Drop files here" : "Drop files here"}
                 </p>
-                <p className="text-gray-400 text-xs mb-2">
+                <p className="text-gray-400 text-[10px] sm:text-xs mb-2">
                   Supported format: PDF, DOCX
                 </p>
-                <p className="text-gray-400 text-xs mb-2">OR</p>
-                <button className="text-blue-400 hover:text-blue-300 text-sm">
+                <p className="text-gray-400 text-[10px] sm:text-xs mb-2">OR</p>
+                <button className="text-blue-400 hover:text-blue-300 text-xs sm:text-sm">
                   Browse files
                 </button>
               </>
@@ -183,15 +181,15 @@ export default function UploadSection() {
         </div>
       </div>
       {/* OR Divider */}
-      <div className="flex items-center justify-center my-4">
+      <div className="flex items-center justify-center my-3 sm:my-4">
         <div className="border-t border-gray-600 flex-grow"></div>
-        <span className="px-4 text-gray-400 text-sm">OR</span>
+        <span className="px-3 sm:px-4 text-gray-400 text-xs sm:text-sm">OR</span>
         <div className="border-t border-gray-600 flex-grow"></div>
       </div>
       {/* Create from scratch button */}
       <button
         onClick={() => router.push("/chat")}
-        className="w-full bg-[#3C3C3C] text-white p-4 rounded-lg hover:bg-[#4C4C4C] transition-colors cursor-pointer"
+        className="w-full bg-[#3C3C3C] text-white p-3 sm:p-4 rounded-lg hover:bg-[#4C4C4C] transition-colors cursor-pointer text-sm sm:text-base"
       >
         Create from scratch
       </button>

@@ -4,115 +4,76 @@ import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from 'swr';
 import Sidebar from "@/components/Sidebar";
 import RequirementCard from "./components/RequirementCard";
 
-// Default requirements as fallback
-const defaultRequirements = [
-  {
-    title: "GenAI & Blockchain - ML/AI Engineer",
-    level: "Senior",
-    duration: "12 Months",
-    role: "Machine Learning Engineer",
-    mustHaveSkills: "Model Training, Data Preprocessing, MLOps",
-    goodToHaveSkills: "NLP, Computer Vision, Blockchain Integration",
-  },
-  {
-    title: "Software Development - Full Stack Developer",
-    level: "Mid Senior",
-    duration: "6 Months",
-    role: "Full Stack Developer | MERN Stack",
-    mustHaveSkills: "API Development, Frontend Optimization",
-    goodToHaveSkills: "GraphQL, Docker, Microservices",
-  },
-  {
-    title: "Cloud & DevOps - Site Reliability Engineer",
-    level: "Staff",
-    duration: "3 months",
-    role: "Site Reliability Engineer",
-    mustHaveSkills: "CI/CD, Infrastructure as Code, Observability",
-    goodToHaveSkills: "Security Best Practices, Python Scripting",
-  },
-];
+// Loading skeleton component
+const RequirementSkeleton = () => (
+  <div className="bg-[#131313] rounded-xl p-6 animate-pulse">
+    <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
+    <div className="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
+    <div className="h-4 bg-gray-700 rounded w-2/3 mb-4"></div>
+    <div className="h-4 bg-gray-700 rounded w-full mb-2"></div>
+    <div className="h-4 bg-gray-700 rounded w-5/6"></div>
+  </div>
+);
+
+// Fetcher function for SWR
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const error = new Error('An error occurred while fetching the data.');
+    error.info = await res.json();
+    error.status = res.status;
+    throw error;
+  }
+  return res.json();
+};
 
 export default function DashboardPage() {
   const { user, isSignedIn } = useUser();
   const router = useRouter();
-  const [requirements, setRequirements] = useState(defaultRequirements);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isLinking, setIsLinking] = useState(false);
 
-  // Fetch requirements
-  useEffect(() => {
-    async function fetchRequirements() {
-      if (!isSignedIn || !user) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        console.log("Fetching requirements for user:", user.id);
-        const response = await fetch(`/api/requirements?userId=${user.id}`);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("HTTP Error Response:", {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorText,
-          });
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log("API Response:", result);
-
-        if (result.error) {
-          throw new Error(result.error);
-        }
-
-        if (result.data && result.data.length > 0) {
-          console.log("Found requirements:", result.data);
-          setRequirements(result.data);
-        } else {
-          console.log("No requirements found, using defaults");
-          setRequirements(defaultRequirements);
-        }
-      } catch (error) {
-        console.error("Error fetching requirements:", error);
-        console.error("Full error details:", {
-          message: error.message,
-          stack: error.stack,
-        });
-        setRequirements(defaultRequirements);
-      } finally {
-        setIsLoading(false);
-      }
+  // SWR hook for fetching requirements
+  const { data, error, mutate } = useSWR(
+    isSignedIn && user ? `/api/requirements?userId=${user.id}` : null,
+    fetcher,
+    {
+      refreshInterval: 5000, // Poll every 5 seconds
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
     }
+  );
 
-    fetchRequirements();
-  }, [isSignedIn, user]);
+  const requirements = data?.data || [];
+  const isLoading = !data && !error && isSignedIn;
 
+  // Handle linking existing token
   useEffect(() => {
     const linkExistingToken = async () => {
-      if (!isSignedIn || !user) return;
+      if (!isSignedIn || !user || isLinking) return;
 
+      const temporary_token = localStorage.getItem("recruitment_flow_token");
+      if (!temporary_token) return;
+
+      setIsLinking(true);
       try {
-        // Check for temporary token
-        const temporary_token = localStorage.getItem("recruitment_flow_token");
-        if (!temporary_token) return;
-
-        // Check if user exists in ra_users_duplicate
-        const checkUserResponse = await fetch(
-          `/api/users/duplicate?userid=${user.id}`
-        );
+        const checkUserResponse = await fetch(`/api/users/duplicate?userid=${user.id}`);
         const checkUserData = await checkUserResponse.json();
 
         if (!checkUserData.exists) {
-          // User doesn't exist, create new user
           const userData = {
             email: user.primaryEmailAddress?.emailAddress,
             name: `${user.firstName} ${user.lastName}`.trim(),
             userid: user.id,
             password: Math.random().toString(36).slice(-8),
+            country_code: null,
+            mobile_number: null,
+            company_name: null,
           };
 
           const createUserResponse = await fetch("/api/users/duplicate", {
@@ -122,18 +83,15 @@ export default function DashboardPage() {
           });
 
           if (!createUserResponse.ok) {
-            const error = await createUserResponse.json();
-            throw new Error(error.message || "Failed to store user");
+            throw new Error("Failed to store user");
           }
         }
 
-        // Get numeric ID and ensure it's a number
-        let numericId = parseInt(checkUserData.numericId);
+        const numericId = parseInt(checkUserData.numericId);
         if (!numericId || isNaN(numericId)) {
-          throw new Error("Failed to get numeric ID from ra_users_duplicate");
+          throw new Error("Failed to get numeric ID");
         }
 
-        // Link record to user using numeric ID
         const linkResponse = await fetch("/api/lead-line-item", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -144,25 +102,20 @@ export default function DashboardPage() {
         });
 
         if (!linkResponse.ok) {
-          const errorData = await linkResponse.json();
-          console.error("Failed to link record to user:", errorData);
-          throw new Error("Failed to link record to user");
+          throw new Error("Failed to link record");
         }
 
-        const responseData = await linkResponse.json();
-        console.log("Link response:", responseData);
-
-        // Clear token after successful linking
         localStorage.removeItem("recruitment_flow_token");
+        mutate(); // Revalidate requirements after linking
       } catch (error) {
         console.error("Error linking record:", error);
+      } finally {
+        setIsLinking(false);
       }
     };
 
     linkExistingToken();
-  }, [isSignedIn, user]);
-
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  }, [isSignedIn, user, isLinking, mutate]);
 
   return (
     <div className="flex min-h-screen bg-black overflow-hidden">
@@ -204,9 +157,7 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => {
-                  // Get the current URL with origin
                   const baseUrl = window.location.origin;
-                  // Open /select in new tab with session token
                   window.open(
                     `${baseUrl}/select`,
                     "_blank",
@@ -219,18 +170,36 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Requirements Grid */}
-            <div
-              className={`grid gap-6 ${
-                isSidebarExpanded
-                  ? "grid-cols-1 lg:grid-cols-2"
-                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-              }`}
-            >
-              {requirements.map((req, index) => (
-                <RequirementCard key={index} {...req} />
-              ))}
-            </div>
+            {/* Requirements Grid with Loading State */}
+            {isLoading ? (
+              <div
+                className={`grid gap-6 ${
+                  isSidebarExpanded
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
+                {[1, 2, 3].map((i) => (
+                  <RequirementSkeleton key={i} />
+                ))}
+              </div>
+            ) : requirements.length > 0 ? (
+              <div
+                className={`grid gap-6 ${
+                  isSidebarExpanded
+                    ? "grid-cols-1 lg:grid-cols-2"
+                    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
+                {requirements.map((req, index) => (
+                  <RequirementCard key={index} {...req} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-[400px]">
+                <h3 className="text-3xl font-semibold text-gray-400">No Requirements</h3>
+              </div>
+            )}
           </div>
         </div>
       </div>

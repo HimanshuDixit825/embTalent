@@ -10,11 +10,11 @@ import {
   selectMainTechnology,
   selectTechnologies,
   selectFullstackValidation,
+  restoreSkills,
 } from "@/app/store/techSlice";
 
 const updateTechSkills = async (token, skills) => {
   try {
-    // console.error('\n[Client] updateTechSkills called with:', { token, skills });
     const response = await fetch("/api/lead-line-item", {
       method: "PUT",
       headers: {
@@ -27,17 +27,13 @@ const updateTechSkills = async (token, skills) => {
     });
 
     const result = await response.json();
-    // console.error('[Client] Update API Response:', result);
 
     if (!response.ok || !result.success) {
-      // console.error('[Client] Tech skills update failed:', result.error);
       throw new Error(result.error || "Failed to update tech skills");
     }
 
-    // console.error('[Client] Tech skills updated successfully:', result.data);
     return result.data;
   } catch (error) {
-    // console.error('[Client] Tech skills update error:', error);
     throw error;
   }
 };
@@ -63,69 +59,71 @@ const TechnologyCard = ({
 
   const handleClick = async (e) => {
     e.preventDefault();
-    // console.error('\n[Client] Card clicked - Label:', label, 'Category:', category);
 
     if (isMainSelection) {
-      // console.error('[Client] Main selection clicked:', { label, category });
       try {
-        // Create initial record with domain
-        // console.error('[Client] Creating initial record with domain:', label);
-        // console.error('[Client] Making POST request with:', {
-        // domain: label,
-        // tech_skills: []
-        // });
-        // if (isMainSelection) {
-        //     dispatch(
-        //       setMainSelection({
-        //         label,
-        //         imageSrc,
-        //         category,
-        //         href,
-        //       })
-        //     );
-        //     if (href) {
-        //       router.push(href);
-        //     }
-        //   }
-        const response = await fetch("/api/lead-line-item", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            domain: label,
-            tech_skills: [],
-          }),
-        });
+        const previousLabel = mainSelection?.label;
+        const isSameTechnology = previousLabel === label;
+        let token = localStorage.getItem("recruitment_flow_token");
 
-        const responseText = await response.text();
-        // console.error('[Client] Raw API Response:', responseText);
+        if (isSameTechnology && token) {
+          // Same technology - fetch existing record to restore skills
+          try {
+            const response = await fetch(`/api/lead-line-item?token=${token}`);
+            const result = await response.json();
 
-        let result;
-        try {
-          result = JSON.parse(responseText);
-          // console.error('[Client] Parsed API Response:', result);
-        } catch (parseError) {
-          // console.error('[Client] Failed to parse API response:', parseError);
-          throw new Error("Invalid API response");
-        }
+            if (result.success && result.data) {
+              // Update Redux state first
+              dispatch(
+                setMainSelection({
+                  label,
+                  imageSrc,
+                  category,
+                  href,
+                })
+              );
 
-        if (!response.ok || !result.success) {
-          // console.error('[Client] Failed to create record:', {
-          //     status: response.status,
-          //     statusText: response.statusText,
-          //     error: result.error
-          // });
-          throw new Error(result.error || "Failed to create record");
-        }
+              // Restore skills if they exist
+              if (
+                result.data.must_have?.length > 0 ||
+                result.data.good_to_have?.length > 0
+              ) {
+                dispatch(
+                  restoreSkills({
+                    mustHave: result.data.must_have || [],
+                    goodToHave: result.data.good_to_have || [],
+                  })
+                );
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching existing skills:", error);
+          }
+        } else {
+          // Different technology - create new record with empty skills
+          const response = await fetch("/api/lead-line-item", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              domain: label,
+              tech_skills: [],
+              must_have: [],
+              good_to_have: [],
+            }),
+          });
 
-        const { data } = result;
-        // console.error('[Client] Record created successfully:', data);
+          const result = await response.json();
 
-        // Store token in localStorage
-        // console.error('[Client] Storing token in localStorage:', data.temporary_token);
-        localStorage.setItem("recruitment_flow_token", data.temporary_token);
-        if (isMainSelection) {
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || "Failed to create record");
+          }
+
+          token = result.data.temporary_token;
+          localStorage.setItem("recruitment_flow_token", token);
+
+          // Update Redux state (this will clear skills due to techSlice logic)
           dispatch(
             setMainSelection({
               label,
@@ -134,50 +132,35 @@ const TechnologyCard = ({
               href,
             })
           );
-          if (href) {
-            router.push(href);
-          }
         }
-        // Update Redux state
-        // console.error('[Client] Updating Redux state');
-        dispatch(setMainSelection({ label, imageSrc, category }));
 
-        // Wait for token to be set in localStorage
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Then navigate
-        // console.error('[Client] Navigating to:', href);
+        // Navigate after state updates
         if (href) {
-          //   window.location.href = href;
           router.push(href);
         }
       } catch (error) {
-        // console.error('[Client] Error creating record:', error);
-        // Still allow navigation even if record creation fails
-        dispatch(setMainSelection({ label, imageSrc, category }));
+        console.error("Error handling technology selection:", error);
+        // Still allow navigation even if API calls fail
+        dispatch(
+          setMainSelection({
+            label,
+            imageSrc,
+            category,
+            href,
+          })
+        );
         if (href) {
-          setTimeout(() => {
-            // window.location.href = href;
-            router.push(href);
-          }, 100);
+          router.push(href);
         }
       }
     } else {
+      // Non-main selection handling (Fullstack and specific technologies)
       const isFullstack = mainSelection?.label === "Fullstack";
-      // console.error('[Client] Technology selection:', {
-      //     mainSelection: mainSelection?.label,
-      //     isFullstack,
-      //     selectedTech: { label, category }
-      // });
 
       try {
-        // Get token from localStorage or create new record
         let token = localStorage.getItem("recruitment_flow_token");
-        // console.error('[Client] Retrieved token from localStorage:', token);
 
         if (!token) {
-          // console.error('[Client] No token found, creating new record');
-          // If no token, create a new record
           const response = await fetch("/api/lead-line-item", {
             method: "POST",
             headers: {
@@ -190,81 +173,116 @@ const TechnologyCard = ({
           });
 
           const result = await response.json();
-          // console.error('[Client] API Response:', result);
 
           if (!response.ok || !result.success) {
-            // console.error('[Client] Failed to create record:', result.error);
             throw new Error(result.error || "Failed to create record");
           }
 
-          const { data } = result;
-          // console.error('[Client] New record created:', data);
-          token = data.temporary_token;
+          token = result.data.temporary_token;
           localStorage.setItem("recruitment_flow_token", token);
         }
 
-        // console.error('[Client] Using token for updates:', token);
+        // Check if it's the same technology
+        const currentTech = selectedTechs.find((t) => t.category === category);
+        const isSameTechnology = currentTech?.label === label;
 
-        if (isFullstack) {
-          // console.error('[Client] Fullstack route detected - Main Selection:', mainSelection?.label);
-          // For fullstack route
-          dispatch(toggleTechnology({ label, imageSrc, category }));
+        if (isSameTechnology && token) {
+          // Same technology - fetch and restore existing skills
+          try {
+            const response = await fetch(`/api/lead-line-item?token=${token}`);
+            const result = await response.json();
 
-          // Check if this is a stack selection
-          if (category === "stack") {
-            // Update tech_skills and navigate
-            await updateTechSkills(token, [label]);
-            // console.error('[Client] Stack category detected - Routing to /create-jd');
-            setTimeout(() => {
-              //   window.location.href = "/create-jd";
-              router.push("/create-jd");
-            }, 100);
-          } else {
-            // For frontend/backend selections
-            const nextTechs = [...selectedTechs];
-            if (nextTechs.findIndex((t) => t.category === category) === -1) {
-              nextTechs.push({ label, imageSrc, category });
-            }
+            if (result.success && result.data) {
+              dispatch(toggleTechnology({ label, imageSrc, category }));
 
-            const hasFrontend = nextTechs.some(
-              (tech) => tech.category === "frontend"
-            );
-            const hasBackend = nextTechs.some(
-              (tech) => tech.category === "backend"
-            );
-            // console.error('[Client] Frontend/Backend status:', { hasFrontend, hasBackend });
+              // Restore skills if they exist
+              if (
+                result.data.must_have?.length > 0 ||
+                result.data.good_to_have?.length > 0
+              ) {
+                dispatch(
+                  restoreSkills({
+                    mustHave: result.data.must_have || [],
+                    goodToHave: result.data.good_to_have || [],
+                  })
+                );
+              }
 
-            if (hasFrontend && hasBackend) {
-              // Update tech_skills with both selections
-              const skills = nextTechs.map((tech) => tech.label);
-              await updateTechSkills(token, skills);
-              // console.error('[Client] Frontend + Backend selected - Routing to /create-jd');
-              setTimeout(() => {
-                // window.location.href = "/create-jd";
+              if (isFullstack) {
+                if (category === "stack") {
+                  router.push("/create-jd");
+                } else {
+                  const hasFrontend = selectedTechs.some(
+                    (tech) => tech.category === "frontend"
+                  );
+                  const hasBackend = selectedTechs.some(
+                    (tech) => tech.category === "backend"
+                  );
+
+                  if (hasFrontend && hasBackend) {
+                    router.push("/create-jd");
+                  }
+                }
+              } else {
                 router.push("/create-jd");
-              }, 100);
+              }
             }
+          } catch (error) {
+            console.error("Error fetching existing skills:", error);
+            // Continue with normal flow if fetch fails
+            handleDifferentTechnology();
           }
         } else {
-          // For non-fullstack routes
-          dispatch(toggleTechnology({ label, imageSrc, category }));
-          // Update tech_skills and navigate
-          await updateTechSkills(token, [label]);
-          //   window.location.href = "/create-jd";
-          router.push("/create-jd");
+          handleDifferentTechnology();
+        }
+
+        function handleDifferentTechnology() {
+          if (isFullstack) {
+            dispatch(toggleTechnology({ label, imageSrc, category }));
+
+            if (category === "stack") {
+              updateTechSkills(token, [label]).then(() => {
+                router.push("/create-jd");
+              });
+            } else {
+              const nextTechs = [...selectedTechs];
+              if (nextTechs.findIndex((t) => t.category === category) === -1) {
+                nextTechs.push({ label, imageSrc, category });
+              }
+
+              const hasFrontend = nextTechs.some(
+                (tech) => tech.category === "frontend"
+              );
+              const hasBackend = nextTechs.some(
+                (tech) => tech.category === "backend"
+              );
+
+              if (hasFrontend && hasBackend) {
+                updateTechSkills(
+                  token,
+                  nextTechs.map((tech) => tech.label)
+                ).then(() => {
+                  router.push("/create-jd");
+                });
+              }
+            }
+          } else {
+            dispatch(toggleTechnology({ label, imageSrc, category }));
+            updateTechSkills(token, [label]).then(() => {
+              router.push("/create-jd");
+            });
+          }
         }
       } catch (error) {
-        // console.error('[Client] Error updating tech skills:', error);
+        console.error("Error handling technology selection:", error);
         // Still allow navigation even if update fails
         if (isFullstack) {
           dispatch(toggleTechnology({ label, imageSrc, category }));
           if (category === "stack") {
-            // window.location.href = "/create-jd";
             router.push("/create-jd");
           }
         } else {
           dispatch(toggleTechnology({ label, imageSrc, category }));
-          //   window.location.href = "/create-jd";
           router.push("/create-jd");
         }
       }
@@ -275,26 +293,26 @@ const TechnologyCard = ({
     <button
       onClick={handleClick}
       className={`group rounded-lg transition-all duration-300 cursor-pointer
-                transform hover:-translate-y-1 hover:shadow-lg w-[100px] h-[131px] flex flex-col items-center justify-center p-3
+                transform hover:-translate-y-1 hover:shadow-lg w-full aspect-[3/3.5] sm:aspect-[3/4] flex flex-col items-center justify-center p-2 sm:p-3
                 ${
                   isSelected
                     ? "bg-emerald-900 bg-opacity-50"
-                    : "bg-[#3A3A3A80] border border-[#515050]  hover:bg-gray-700"
+                    : "bg-[#3A3A3A80] border border-[#515050] hover:bg-gray-700"
                 }`}
     >
       <div
-        className="transform transition-all duration-300 
-                group-hover:scale-110 w-[70px] h-[70px] flex items-center justify-center"
+        className="transform transition-all duration-300
+                group-hover:scale-110 w-[55%] sm:w-[60%] aspect-square flex items-center justify-center"
       >
         <Image
           src={imageSrc}
           alt={label}
           width={64}
           height={64}
-          className="object-contain"
+          className="object-contain w-full h-full"
         />
       </div>
-      <span className="text-white text-xs font-bold text-center transition-all duration-300 group-hover:text-opacity-90 mt-2">
+      <span className="text-white text-[10px] sm:text-[11px] md:text-xs font-bold text-center transition-all duration-300 group-hover:text-opacity-90 mt-2">
         {label}
       </span>
       {isSelected && (

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import AnalysisResults from "./components/AnalysisResults";
+import MobileAnalysisResults from "./components/MobileAnalysisResults";
 import PageLayout from "@/components/PageLayout";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
@@ -38,6 +39,7 @@ const ChatPage = () => {
   const mustHaveSkills = useSelector(selectMustHaveSkills);
   const goodToHaveSkills = useSelector(selectGoodToHaveSkills);
   const explanation = useSelector(selectExplanation);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -49,6 +51,20 @@ const ChatPage = () => {
       });
     }
   }, [mainSelection, selectedTechnologies]);
+
+  // Check if mobile on mount and window resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add resize listener
+    window.addEventListener("resize", checkIfMobile);
+    return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -331,9 +347,9 @@ const ChatPage = () => {
                 />
                 <button
                   onClick={() => router.push("/experience")}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg transition-colors relative z-10 cursor-pointer"
+                  className="fixed bottom-16 right-10 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors cursor-pointer"
                 >
-                  Continue to Experience
+                  Submit
                 </button>
               </div>
             )}
@@ -341,99 +357,191 @@ const ChatPage = () => {
         </div>
       }
     >
-      <div className="relative flex flex-col h-screen">
-        <div className="p-6 space-y-2">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="text-white hover:text-gray-300 transition-colors"
-            >
-              <ArrowLeft size={36} />
-            </button>
-            <h1 className="text-[40px] font-bold text-white">
-              AURA - The AI assistant
-            </h1>
+      {isMobile ? (
+        // Mobile layout - fixed header and skills analysis
+        <div className="relative flex flex-col h-screen">
+          {/* Fixed header */}
+          <div className="p-4 space-y-2">
+            <div className="flex items-center">
+              <h1 className="sm:text-[28px] text-[18px] font-bold text-white">
+                AURA - The AI assistant
+              </h1>
+            </div>
+            <p className="text-gray-400 italic text-[12px] font-inter">
+              Your AI assistant to help you build the perfect team.
+            </p>
           </div>
-          <p className="text-gray-400 italic text-[12px] font-inter ml-[52px]">
-            Your AI assistant to help you build the perfect team.
-          </p>
-        </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-8 px-6 min-h-0 pb-[100px] scrollbar-hide">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`${
-                message.sender === "user" ? "ml-auto" : ""
-              } max-w-[80%]`}
-            >
-              <div
-                className={`flex items-center rounded-lg bg-[#3C3C3C] shadow-lg ${
-                  message.sender === "user" ? "flex-row-reverse" : ""
-                }`}
-              >
-                <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
-                  <img
-                    src={message.avatar}
-                    alt={message.sender}
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
-                <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
-                  {message.content}
-                </p>
-              </div>
-            </div>
-          ))}
-
-          {isLoading && streamingMessage && (
-            <div className="max-w-[80%]">
-              <div className="flex items-center rounded-lg bg-[#3C3C3C] shadow-lg">
-                <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
-                  <img
-                    src="/Orb.png"
-                    alt="bot"
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
-                <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
-                  {streamingMessage}
-                </p>
-              </div>
-            </div>
+          {/* Skills analysis */}
+          {(mustHaveSkills.length > 0 || goodToHaveSkills.length > 0) && (
+            <MobileAnalysisResults results={{ mustHave: mustHaveSkills, goodToHave: goodToHaveSkills, explanation }} />
           )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-[#0B0B0BBF] pt-4 pb-2 px-6 mx-6 mb-6 rounded-lg">
-          <div className="relative">
-            <textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={(e) => {
-                setInputMessage(e.target.value);
-                adjustTextareaHeight();
-              }}
-              onKeyDown={handleKeyPress}
-              placeholder="Message AURA"
-              rows={1}
-              className="w-full bg-[#3A3A3A] border border-[#515050] rounded-lg py-3.5 pl-4 pr-12 text-gray-300 focus:outline-none focus:border-emerald-500 shadow-lg resize-none overflow-hidden"
-            />
-            <button
-              onClick={handleSendMessage}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-[#515050] rounded-lg transition-colors"
-            >
-              <Image
-                src="/send.png"
-                alt="Send"
-                width={36}
-                height={36}
-                className="opacity-60 hover:opacity-100 transition-opacity"
+          {/* Chat messages - scrollable area */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 px-4 pb-[100px] scrollbar-hide">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`${message.sender === "user" ? "ml-auto" : ""} max-w-[80%]`}
+              >
+                <div
+                  className={`flex items-center rounded-lg bg-[#3C3C3C] shadow-lg ${message.sender === "user" ? "flex-row-reverse" : ""}`}
+                >
+                  <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
+                    <img
+                      src={message.avatar}
+                      alt={message.sender}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
+                    {message.content}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {isLoading && streamingMessage && (
+              <div className="max-w-[80%]">
+                <div className="flex items-center rounded-lg bg-[#3C3C3C] shadow-lg">
+                  <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
+                    <img
+                      src="/Orb.png"
+                      alt="bot"
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
+                    {streamingMessage}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Fixed input box at bottom */}
+          <div className="sticky bottom-0 left-0 right-0 bg-[#0B0B0BBF] pt-4 pb-2 px-4 mx-4 mb-4 rounded-lg z-10">
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => {
+                  setInputMessage(e.target.value);
+                  adjustTextareaHeight();
+                }}
+                onKeyDown={handleKeyPress}
+                placeholder="Ask Aura: Need 5 YOE in React and Node"
+                rows={1}
+                className="w-full bg-[#3A3A3A] border border-[#515050] rounded-lg py-3.5 pl-4 pr-12 text-gray-300 focus:outline-none focus:border-emerald-500 shadow-lg resize-none overflow-hidden text-[12px]"
               />
-            </button>
+              <button
+                onClick={handleSendMessage}
+                className="absolute right-3 top-[45%] -translate-y-1/2 p-1.5 hover:bg-[#515050] rounded-lg transition-colors flex items-center justify-center"
+              >
+                <Image
+                  src="/send.png"
+                  alt="Send"
+                  width={36}
+                  height={36}
+                  className="opacity-60 hover:opacity-100 transition-opacity"
+                />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        // Desktop layout
+        <div className="relative flex flex-col h-screen">
+          <div className="p-6 space-y-2">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.back()}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                <ArrowLeft size={36} />
+              </button>
+              <h1 className="text-[40px] font-bold text-white">
+                AURA - The AI assistant
+              </h1>
+            </div>
+            <p className="text-gray-400 italic text-[12px] font-inter ml-[52px]">
+              Your AI assistant to help you build the perfect team.
+            </p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-8 px-6 min-h-0 pb-[100px] scrollbar-hide">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`${message.sender === "user" ? "ml-auto" : ""} max-w-[80%]`}
+              >
+                <div
+                  className={`flex items-center rounded-lg bg-[#3C3C3C] shadow-lg ${message.sender === "user" ? "flex-row-reverse" : ""}`}
+                >
+                  <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
+                    <img
+                      src={message.avatar}
+                      alt={message.sender}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
+                    {message.content}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {isLoading && streamingMessage && (
+              <div className="max-w-[80%]">
+                <div className="flex items-center rounded-lg bg-[#3C3C3C] shadow-lg">
+                  <div className="w-8 h-8 flex-shrink-0 mx-4 my-3">
+                    <img
+                      src="/Orb.png"
+                      alt="bot"
+                      className="w-8 h-8 object-contain"
+                    />
+                  </div>
+                  <p className="text-gray-300 font-inter text-[12px] flex-1 py-3 px-4">
+                    {streamingMessage}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 bg-[#0B0B0BBF] pt-4 pb-2 px-6 mx-6 mb-6 rounded-lg">
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => {
+                  setInputMessage(e.target.value);
+                  adjustTextareaHeight();
+                }}
+                onKeyDown={handleKeyPress}
+                placeholder="Ask Aura: Need 5 YOE in React and Node"
+                rows={1}
+                className="w-full bg-[#3A3A3A] border border-[#515050] rounded-lg py-3.5 pl-4 pr-12 text-gray-300 focus:outline-none focus:border-emerald-500 shadow-lg resize-none overflow-hidden text-[12px]"
+              />
+              <button
+                onClick={handleSendMessage}
+                className="absolute right-3 top-[45%] -translate-y-1/2 p-1.5 hover:bg-[#515050] rounded-lg transition-colors flex items-center justify-center"
+              >
+                <Image
+                  src="/send.png"
+                  alt="Send"
+                  width={36}
+                  height={36}
+                  className="opacity-60 hover:opacity-100 transition-opacity"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 };

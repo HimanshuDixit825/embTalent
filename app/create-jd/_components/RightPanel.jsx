@@ -42,13 +42,41 @@ export default function RightPanel() {
                 >
                   <span>{skill}</span>
                   <button
-                    onClick={() =>
+                    onClick={async () => {
+                      // Update Redux state
                       dispatch(
                         type === "must"
                           ? removeMustHaveSkill(skill)
                           : removeGoodToHaveSkill(skill)
-                      )
-                    }
+                      );
+
+                      // Sync with database
+                      try {
+                        const token = localStorage.getItem("recruitment_flow_token");
+                        if (token) {
+                          const updatedMustHave = type === "must"
+                            ? mustHaveSkills.filter(s => s !== skill)
+                            : mustHaveSkills;
+                          const updatedGoodToHave = type === "good"
+                            ? goodToHaveSkills.filter(s => s !== skill)
+                            : goodToHaveSkills;
+
+                          await fetch("/api/lead-line-item", {
+                            method: "PUT",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              temporary_token: token,
+                              must_have: updatedMustHave,
+                              good_to_have: updatedGoodToHave,
+                            }),
+                          });
+                        }
+                      } catch (error) {
+                        console.error("Error syncing skills:", error);
+                      }
+                    }}
                     className="ml-2 transition-all"
                   >
                     <Image
@@ -80,12 +108,41 @@ export default function RightPanel() {
               )}
               {showDropdown && (
                 <SkillDropdown
-                  onSelect={(skill) => {
+                  onSelect={async (skill) => {
+                    // Update Redux state
                     dispatch(
                       type === "must"
                         ? addMustHaveSkill(skill)
                         : addGoodToHaveSkill(skill)
                     );
+
+                    // Sync with database
+                    try {
+                      const token = localStorage.getItem("recruitment_flow_token");
+                      if (token) {
+                        const updatedMustHave = type === "must" 
+                          ? [...mustHaveSkills, skill]
+                          : mustHaveSkills;
+                        const updatedGoodToHave = type === "good"
+                          ? [...goodToHaveSkills, skill]
+                          : goodToHaveSkills;
+
+                        await fetch("/api/lead-line-item", {
+                          method: "PUT",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            temporary_token: token,
+                            must_have: updatedMustHave,
+                            good_to_have: updatedGoodToHave,
+                          }),
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Error syncing skills:", error);
+                    }
+                    
                     setShowDropdown(false);
                   }}
                   onClose={() => setShowDropdown(false)}
@@ -128,12 +185,16 @@ export default function RightPanel() {
         />
 
         {(mustHaveSkills.length > 0 || goodToHaveSkills.length > 0) && (
-          <button
-            onClick={() => router.push("/experience")}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg transition-colors relative z-10 cursor-pointer"
-          >
-            Continue to Experience
-          </button>
+          <div className="absolute bottom-20 right-6">
+            {" "}
+            {/* New container for positioning */}
+            <button
+              onClick={() => router.push("/experience")}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg transition-colors relative z-10 cursor-pointer"
+            >
+              Submit
+            </button>
+          </div>
         )}
       </div>
     </div>

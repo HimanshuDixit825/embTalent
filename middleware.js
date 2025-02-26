@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   "/auth/sign-up(.*)", // Sign up page
   "/api/webhook/clerk", // Clerk webhook
   "/api/users/duplicate", // Duplicate users API
+  "/api/users/check-auth", // Check user auth API
   "/api/chat", // Chat API
   "/api/analyze-pdf", // PDF analysis API
   "/api/lead-line-item", // Lead line item API
@@ -46,6 +47,6 @@ export const config = {
     // Exclude Next.js static files, webhook, and public routes
     "/((?!_next|api/webhook/clerk|select|tech|create-jd|experience|chat|.*\\.[\\w]+$).*)",
     // Include API routes except webhook and duplicate users
-    "/(api(?!/webhook/clerk|/users/duplicate|/analyze-pdf|/chat|/lead-line-item|/auth/me))(.*)",
+    "/(api(?!/webhook/clerk|/users/duplicate|/users/check-auth|/analyze-pdf|/chat|/lead-line-item|/auth/me))(.*)",
   ],
 };

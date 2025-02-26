@@ -1,16 +1,22 @@
 "use client";
+import MobileSkillsPanel from "./MobileSkillsPanel";
+
 export default function PdfViewer({ url, onBack }) {
   return (
-    <div className="w-full h-[calc(100vh-6rem)] bg-[#3C3C3C] rounded-lg overflow-hidden">
-      <div className="w-full h-full flex flex-col">
-        <div className="flex items-center bg-[#646464] px-4 py-2">
+    <div className="w-full bg-[#3C3C3C] rounded-lg overflow-hidden">
+      <div className="w-full flex flex-col">
+        {/* Mobile Skills Panel - Only shown on mobile */}
+        <div className="block md:hidden mb-3">
+          <MobileSkillsPanel />
+        </div>
+        <div className="flex items-center bg-black px-3 sm:px-4 py-2">
           <button
             onClick={onBack}
-            className="text-white hover:text-gray-300 flex items-center gap-2"
+            className="text-white hover:text-gray-300 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
+              className="h-4 w-4 sm:h-5 sm:w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -38,7 +44,7 @@ export default function PdfViewer({ url, onBack }) {
                         Open in new tab
                     </a>
                 </div> */}
-        <div className="flex-1 w-full">
+        <div className="w-full h-[calc(100vh-20rem)] md:h-[calc(100vh-10rem)] overflow-auto">
           <iframe
             src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&embedded=true`}
             className="w-full h-full hide-scrollbar"
